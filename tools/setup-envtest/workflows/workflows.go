@@ -10,6 +10,7 @@ import (
 	"github.com/go-logr/logr"
 
 	envp "sigs.k8s.io/controller-runtime/tools/setup-envtest/env"
+	"sigs.k8s.io/controller-runtime/tools/setup-envtest/versions"
 )
 
 // Use is a workflow that prints out information about stored
@@ -40,7 +41,14 @@ func (f Use) Do(env *envp.Env) {
 		envp.Exit(2, "no such version (%s) exists on disk for this architecture (%s) -- try running `list -i` to see what's on disk", env.Version, env.Platform)
 	}
 	env.Fetch(ctx)
-	env.PrintInfo(f.PrintFormat)
+	// env.PrintInfo(f.PrintFormat)
+	if env.EtcdK8SVersion != "" {
+		actualVersion := env.Version.String()
+		env.VerifySum = false
+		env.Version, _ = versions.FromExpr(env.EtcdK8SVersion)
+		env.Fetch(ctx)
+		env.ReplaceEtcd(ctx, actualVersion)
+	}
 }
 
 // List is a workflow that lists version-platform pairs in the store

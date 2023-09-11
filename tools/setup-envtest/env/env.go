@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -41,6 +42,8 @@ type Env struct {
 	// ForceDownload forces us to ignore local files and always
 	// contact GCS & re-download.
 	ForceDownload bool
+	// Separate version of k8s to grab different etcd
+	EtcdK8SVersion string
 
 	// Client is our remote client for contacting GCS.
 	Client *remote.Client
@@ -346,6 +349,24 @@ func (e *Env) Remove(ctx context.Context) {
 	if err != nil {
 		ExitCause(2, err, "unable to remove all requested version(s)")
 	}
+}
+
+func (e *Env) ReplaceEtcd(ctx context.Context, actualVersion string) {
+	path := e.manualPath
+	if e.manualPath == "" {
+		item := e.item()
+		var err error
+		path, err = e.Store.Path(item)
+		if err != nil {
+			ExitCause(2, err, "unable to get path for version %s", item)
+		}
+	}
+	err := e.FS.Rename(path+"/etcd", strings.Replace(path, e.Version.String(), actualVersion, 1)+"/etcd")
+	if err != nil {
+		log.Fatal(err)
+	}
+	e.FS.Remove(path)
+
 }
 
 // PrintInfo prints out information about a single, current version

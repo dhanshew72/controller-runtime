@@ -53,6 +53,7 @@ var (
 	remoteServer = flag.String("remote-server", "storage.googleapis.com",
 		"remote server to query from.  You can override this if you want to run "+
 			"an internal storage server instead, or for testing.")
+	etcdK8SVersion = flag.String("etcd-k8s-version", "", "separate k8s binary version to get different etcd versio downlaoded and bundled")
 )
 
 // TODO(directxman12): handle interrupts?
@@ -88,9 +89,10 @@ func setupEnv(globalLog logr.Logger, version string) *envp.Env {
 			Bucket: *remoteBucket,
 			Server: *remoteServer,
 		},
-		VerifySum:     *verify,
-		ForceDownload: *force,
-		NoDownload:    *installedOnly,
+		EtcdK8SVersion: *etcdK8SVersion,
+		VerifySum:      *verify,
+		ForceDownload:  *force,
+		NoDownload:     *installedOnly,
 		Platform: versions.PlatformItem{
 			Platform: versions.Platform{
 				OS:   *targetOS,
